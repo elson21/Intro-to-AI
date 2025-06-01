@@ -1,0 +1,9 @@
+file1: Hello world!
+
+file2: Hello Computer!
+file1: This is computer
+
+file2: This is user
+file1: Who are you?
+
+file2: My name is ENIAC

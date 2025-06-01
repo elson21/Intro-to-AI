@@ -1,0 +1,3 @@
+file1: Hello world!
+file1: This is computer
+file1: Who are you?
