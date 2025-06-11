@@ -122,31 +122,77 @@ def bfs(initial_state: list, goal_state: list) -> list | None:
     return None
 
 
+def user_input(prompt: str) -> list:
+    """
+    Receives user input and cleans away all delimiters and whitespaces
+
+    Args:
+        prompt (str): Input from user, like "4, 1, 0, 2, 5, 3"
+
+    Returns:
+        list: A list of unique integers like between 0 and 5
+    """
+
+    while True:
+        try:
+            raw = input(prompt)
+            state = list(map(int, raw.replace(",", " ").split()))
+
+            # make sure the ensure enters 6 integers exactly
+            if len(state) != 6:
+                raise ValueError("Enter 6 integers exactly.")
+            # make sure there are no duplicates from 0-5
+            if set(state) != set(range(6)):
+                raise ValueError("Enter integers between 0 and 5, no duplicates allowed.")
+            return state
+        except ValueError as e:
+            print(f"Invalid input: {e}")
+
+
 def main() -> None:
 
     #TODO: Implement a menu for [1]BFS, [2]IDS, [3]New start state, [4]New goal state, [5]exit
-    #TODO: Put this in a function called cleaner or something
-    user_input_initial = input("Enter the state of the board (e.g. 4,1,0,2,5,3):")
-    user_input_goal = input("Enter the goal state (e.g. 1,2,3,4,5,0):")
 
-    cleaned_input_initial = user_input_initial.replace(",", " ").replace(".", " ")
-    cleaned_input_goal = user_input_goal.replace(",", " ").replace(".", " ")
 
-    initial_state = list(map(int, cleaned_input_initial.strip().split()))
-    goal_state = list(map(int, cleaned_input_goal.strip().split()))
-    result = bfs(initial_state, goal_state)
+    initial_state = user_input("Enter the state of the board (e.g. 4,1,0,2,5,3):")
+    goal_state = user_input("Enter the goal state (e.g. 1,2,3,4,5,0):")
 
-    count = 0
+    while True:
+        print("\nMenu:")
+        print("[1] BFS")
+        print("[2] IDS")
+        print("[3] New initial state")
+        print("[4] New goal state")
+        print("[5] Exit")
 
-    if result == None:
-        print("No solution")
-    else:
-        print("Sequence of moves (BFS):")
-        for action in result:
-            count += 1
-            print(action, end=" ")
+        choice = input("Choose an option: ")
 
-    print(f"\nNo. of steps: {count}\n")
+        if choice == "1":
+            result = bfs(initial_state, goal_state)
+            
+            if result == None:
+                print("No solution")
+            else:
+                print("\nSequence of moves (BFS):", end=" ")
+                print(*result)
+                print(f"No. of steps: {len(result)}\n")
+
+        elif choice == "2":
+            # TODO: implement IDS
+            pass
+
+        elif choice == "3":
+            initial_state =  user_input("Enter the state of the board (e.g. 4,1,0,2,5,3):")
+
+        elif choice == "4":
+            goal_state = user_input("Enter the goal state (e.g. 1,2,3,4,5,0):")
+
+        elif choice == "5":
+            print("Exiting very gracefully...")
+            break
+
+        else:
+            print("Invalid choice. Please choose between 1-5")
 
 
 if __name__ == "__main__":
