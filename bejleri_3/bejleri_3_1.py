@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 
 from collections import deque
+import timeit
+import time
+import sys
 
 """
 5-tile puzzle with BFS and IDS
@@ -95,9 +98,10 @@ def bfs(initial_state: list, goal_state: list) -> list | None:
               goal configuration as a list or None if no solution is found
     """
 
-    visited = set()
-    fringe = deque()
+    visited = set() # holds the visisted nodes
+    fringe = deque()    # holds the nodes to be explored
     fringe.append((initial_state, []))   # (initial configuration, path so far). Path so far starts empty
+    visited.add(tuple(initial_state))
 
     while fringe:
         # save the current state and path
@@ -107,18 +111,102 @@ def bfs(initial_state: list, goal_state: list) -> list | None:
         if current_state == goal_state:
             return path
         
-        # if current state has been repeated, keep going
-        if tuple(current_state) in visited:
-            continue
-
-        visited.add(tuple(current_state))
+        # # if current state has been repeated, keep going
+        # if tuple(current_state) in visited:
+        #     continue
 
         # check the valid moves for each action and put them in a new_state
         for action in get_valid_move(current_state):
             new_state = move_tile(current_state, action)
+            key = tuple(new_state)
             if tuple(new_state) not in visited:
+                # visited.update(new_state)
+                visited.add(key)
                 fringe.append((new_state, path + [action]))
 
+    return None
+
+def progress_bar():
+        for i in range(0, 101, 10):
+            sys.stdout.write(f"\rShutting down... [{i}%]")
+            sys.stdout.flush()
+            time.sleep(0.3)
+        print()
+
+        messages = [
+        "Exiting very gracefully...",
+        "I'm trying...",
+        "Let me ask Google...",
+        "I know, I'll ask ChatGPT...",
+        "Hmm... Let me get the hammer 🔨"
+        "That worked! Bye!"
+    ]
+        
+        for msg in messages:
+            print(msg)
+            time.sleep(2)
+
+
+def dfs(initial_state: list, goal_state: list, depth_limit: int) -> list | None:
+    """
+    Implementation of the DFS helper for IDS. Takes the initial and goal configuration
+    of the board and find the best way to reach it.
+
+    Args:
+        initial_state (list): The initial configuration of the board
+        goal_state (list): The goal configuration of the board
+        depth_limit (int): The depth limit as incremented by the IDS
+
+    Returns:
+        list: Returns the path if the goal state is found, else None
+    """
+
+    stack = deque() # holds the node to be explored (fringe in BFS, but I like the name stack more)
+    visited = set() # holds the visited nodes
+
+    stack.append((initial_state, [], 0))    # [(current state, path, current depth)]
+
+    # loop until you find the goal state
+    while stack:
+        current_state, path, depth = stack.pop()  
+
+        # check if goal is found
+        if current_state == goal_state:
+            return path
+        
+        if depth < depth_limit:
+            visited.add(tuple(current_state))
+            for action in get_valid_move(current_state):
+                new_state = move_tile(current_state, action)
+                if tuple(new_state) not in visited:
+                    stack.append((new_state, path + [action], depth + 1))
+
+    return None
+
+    
+def ids(initial_state: list, goal_state: list, max_depth = 20) -> list | None:
+    """
+    Implementation of the IDS. Takes the initial and goal configuratios
+    of the board and starts check each level and increases the depth
+    until the goal configuration is found. Then it returns the path.
+
+    Args:
+        initial_state (list): The inigial configration of the voard
+        goal_state (list): The goal configuration of the board
+        max_depth (int): The maximum depth limit that it can go to
+
+    Returns:
+        list: Return the path if goal is found, else None
+    """
+
+    depth_limit = 0 # start with the root (depth 0)
+
+    # keep calling DFS until goal is met
+    for depth_limit in range(max_depth + 1):
+        result = dfs(initial_state, goal_state, depth_limit)
+        if result is not None:
+            return result
+        
     return None
 
 
@@ -151,11 +239,11 @@ def user_input(prompt: str) -> list:
 
 def main() -> None:
 
-    #TODO: Implement a menu for [1]BFS, [2]IDS, [3]New start state, [4]New goal state, [5]exit
-
-
     initial_state = user_input("Enter the state of the board (e.g. 4,1,0,2,5,3):")
     goal_state = user_input("Enter the goal state (e.g. 1,2,3,4,5,0):")
+
+    # # check if there is a solution
+    # if not is_solution(initial_state):
 
     while True:
         print("\nMenu:")
@@ -165,30 +253,54 @@ def main() -> None:
         print("[4] New goal state")
         print("[5] Exit")
 
-        choice = input("Choose an option: ")
+        choice = input("\nChoose an option: ")
 
+        # BFS
         if choice == "1":
+            starttime = timeit.default_timer()
+            print("============================================")
+            # print("The start time is :",starttime)
+
             result = bfs(initial_state, goal_state)
             
             if result == None:
                 print("No solution")
             else:
-                print("\nSequence of moves (BFS):", end=" ")
+                print("Sequence of moves (BFS):", end=" ")
                 print(*result)
-                print(f"No. of steps: {len(result)}\n")
+                print(f"No. of steps (BFS): {len(result)}\n")
+            
+            print("Time taken:", timeit.default_timer() - starttime)
+            print("============================================")
 
+        # IDS
         elif choice == "2":
-            # TODO: implement IDS
-            pass
+            starttime = timeit.default_timer()
+            print("============================================")
+            # print("The start time is :",starttime)            
+            result = ids(initial_state, goal_state)
 
+            if result is None:
+                print("No solution.")
+            else:
+                print("Sequence of moves (IDS):", end=" ")
+                print(*result)
+                print(f"No. of steps (IDS): {len(result)}\n")
+
+            print("Time taken:", timeit.default_timer() - starttime)   
+            print("============================================")             
+        
+        # New start state
         elif choice == "3":
             initial_state =  user_input("Enter the state of the board (e.g. 4,1,0,2,5,3):")
-
+        
+        # New goal state
         elif choice == "4":
             goal_state = user_input("Enter the goal state (e.g. 1,2,3,4,5,0):")
 
+        # Exit
         elif choice == "5":
-            print("Exiting very gracefully...")
+            progress_bar()
             break
 
         else:
